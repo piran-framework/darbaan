@@ -12,7 +12,7 @@ Then you can add darbaan into your project POM file like this:
 <dependency>
         <groupId>com.piran-framework</groupId>
         <artifactId>darbaan</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.1-SNAPSHOT</version>
 </dependency>
 ```
 

@@ -6,7 +6,7 @@
 
   <groupId>com.piran-framework</groupId>
   <artifactId>darbaan</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.1-SNAPSHOT</version>
   <name>Darbaan</name>
   <description>Darbaan gateway library to act as channel in SAFIR-DARBAAN spec</description>
   <url>http://github.com/piran-framework/darbaan/</url>
