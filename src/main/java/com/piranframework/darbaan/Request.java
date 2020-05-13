@@ -29,10 +29,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Objects;
 
 /**
- * Instances of this class representing a request. process method of the {@link Darbaan}
- * object accept instance of this class.
+ * Instance of this class representing a request. The process method of {@link Darbaan}
+ * object accepts instance of this class.
  * <p>
- * Request id automatically generated and assigned by darbaan. clients can use it after sending
+ * Request id automatically generated and assigned by darbaan. Clients can use it after sending
  * request object to the process method of {@link Darbaan}
  * <p>
  * Client can set payloadBytes directly or just set the payload, on the condition of setting
@@ -42,125 +42,126 @@ import java.util.Objects;
  * @author Isa Hekmatizadeh
  */
 public class Request {
-  private static final ObjectMapper mapper = new ObjectMapper();
 
-  static {
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    mapper.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
-  }
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  private String role;
-  private String requestId;
-  private String serviceName;
-  private String serviceVersion;
-  private String actionCategory;
-  private String actionName;
-  private byte[] payloadBytes = new byte[0];
-  private Object payload;
+    static {
+        MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        MAPPER.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
+    }
 
-  public String getRole() {
-    return role;
-  }
+    private String role;
+    private String requestId;
+    private String serviceName;
+    private String serviceVersion;
+    private String actionCategory;
+    private String actionName;
+    private byte[] payloadBytes = new byte[0];
+    private Object payload;
 
-  public Request setRole(String role) {
-    this.role = role;
-    return this;
-  }
+    public String getRole() {
+        return role;
+    }
 
-  /**
-   * Retrieve request id. request id generated just after calling process method of
-   * {@link Darbaan} instance
-   *
-   * @return request id
-   */
-  public String getRequestId() {
-    return requestId;
-  }
+    public Request setRole(String role) {
+        this.role = role;
+        return this;
+    }
 
-  void setRequestId(String requestId) {
-    this.requestId = requestId;
-  }
+    /**
+     * Retrieve request id. request id generated just after calling process method of
+     * {@link Darbaan} instance
+     *
+     * @return request id
+     */
+    public String getRequestId() {
+        return requestId;
+    }
 
-  public String getServiceName() {
-    return serviceName;
-  }
+    void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
 
-  public Request setServiceName(String serviceName) {
-    this.serviceName = serviceName;
-    return this;
-  }
+    public String getServiceName() {
+        return serviceName;
+    }
 
-  public String getServiceVersion() {
-    return serviceVersion;
-  }
+    public Request setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+        return this;
+    }
 
-  public Request setServiceVersion(String serviceVersion) {
-    this.serviceVersion = serviceVersion;
-    return this;
-  }
+    public String getServiceVersion() {
+        return serviceVersion;
+    }
 
-  public String getActionCategory() {
-    return actionCategory;
-  }
+    public Request setServiceVersion(String serviceVersion) {
+        this.serviceVersion = serviceVersion;
+        return this;
+    }
 
-  public Request setActionCategory(String actionCategory) {
-    this.actionCategory = actionCategory;
-    return this;
-  }
+    public String getActionCategory() {
+        return actionCategory;
+    }
 
-  public String getActionName() {
-    return actionName;
-  }
+    public Request setActionCategory(String actionCategory) {
+        this.actionCategory = actionCategory;
+        return this;
+    }
 
-  public Request setActionName(String actionName) {
-    this.actionName = actionName;
-    return this;
-  }
+    public String getActionName() {
+        return actionName;
+    }
+
+    public Request setActionName(String actionName) {
+        this.actionName = actionName;
+        return this;
+    }
 
 
-  public byte[] getPayloadBytes() {
-    return payloadBytes;
-  }
+    public byte[] getPayloadBytes() {
+        return payloadBytes;
+    }
 
-  /**
-   * Set the payload bytes directly
-   *
-   * @param payloadBytes json serialized payload
-   * @return current instance
-   */
-  public Request setPayloadBytes(byte[] payloadBytes) {
-    this.payloadBytes = payloadBytes;
-    return this;
-  }
+    /**
+     * Set the payload bytes directly
+     *
+     * @param payloadBytes json serialized payload
+     * @return current instance
+     */
+    public Request setPayloadBytes(byte[] payloadBytes) {
+        this.payloadBytes = payloadBytes;
+        return this;
+    }
 
-  public Object getPayload() {
-    return payload;
-  }
+    public Object getPayload() {
+        return payload;
+    }
 
-  /**
-   * Set the payload object, this method automatically serialize payload
-   *
-   * @param payload action argument to be sent
-   * @return current instance
-   * @throws JsonProcessingException if serializing payload encounter exception
-   */
-  public Request setPayload(Object payload) throws JsonProcessingException {
-    this.payload = payload;
-    this.payloadBytes = mapper.writeValueAsBytes(payload);
-    return this;
-  }
+    /**
+     * Set the payload object, this method automatically serialize payload
+     *
+     * @param payload action argument to be sent
+     * @return current instance
+     * @throws JsonProcessingException if serializing payload encounter exception
+     */
+    public Request setPayload(Object payload) throws JsonProcessingException {
+        this.payload = payload;
+        this.payloadBytes = MAPPER.writeValueAsBytes(payload);
+        return this;
+    }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    Request request = (Request) o;
-    return Objects.equals(requestId, request.requestId);
-  }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Request request = (Request) o;
+        return Objects.equals(requestId, request.requestId);
+    }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(requestId);
-  }
+    @Override
+    public int hashCode() {
+        return Objects.hash(requestId);
+    }
 }

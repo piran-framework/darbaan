@@ -23,7 +23,9 @@ package com.piranframework.darbaan.exception;
  * @author Isa Hekmatizadeh
  */
 public abstract class DarbaanException extends Exception {
+
   public DarbaanException(String message) {
     super(message);
   }
+
 }

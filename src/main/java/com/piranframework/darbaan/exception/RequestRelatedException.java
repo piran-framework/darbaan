@@ -23,10 +23,15 @@ package com.piranframework.darbaan.exception;
  * @author Isa Hekmatizadeh
  */
 public abstract class RequestRelatedException extends DarbaanException {
+
   private final String requestId;
 
   protected RequestRelatedException(String message, String requestId) {
     super(message);
     this.requestId = requestId;
   }
+
+    public String getRequestId() {
+        return requestId;
+    }
 }

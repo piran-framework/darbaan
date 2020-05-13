@@ -25,18 +25,19 @@ import com.piranframework.geev.Node;
  * @author Isa Hekmatizadeh
  */
 public class IdentityUtil {
-  public static String serverId(Node node) {
-    return node.getIp() + ":" + node.getPort();
-  }
 
-  /**
-   * Generate service id from name and version
-   *
-   * @param name    service name
-   * @param version service version
-   * @return identification of the service
-   */
-  public static String serviceId(String name, String version) {
-    return name + "-" + version;
-  }
+    public static String serverId(Node node) {
+        return node.getIp() + ":" + node.getPort();
+    }
+
+    /**
+     * Generate service id from name and version
+     *
+     * @param name    service name
+     * @param version service version
+     * @return identification of the service
+     */
+    public static String serviceId(String name, String version) {
+        return name + "-" + version;
+    }
 }

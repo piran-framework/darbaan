@@ -19,12 +19,12 @@
 
 package com.piranframework.darbaan.integration;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.piranframework.darbaan.Darbaan;
 import com.piranframework.darbaan.DarbaanConfiguration;
 import com.piranframework.darbaan.Request;
 import com.piranframework.darbaan.Response;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -36,44 +36,43 @@ import java.util.concurrent.ExecutionException;
  * @author Isa Hekmatizadeh
  */
 public class InteractiveServer {
-  private static final ObjectMapper mapper = new ObjectMapper();
 
-  public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
-    Darbaan darbaan = Darbaan.newInstance(new DarbaanConfiguration.Builder()
-        .setIp("192.168.13.51")
-        .setPort(6001)
-        .build());
-    byte[] payload = new byte[0];
-    try {
-      payload = mapper.writeValueAsBytes(Collections.singletonList("salam"));
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
+        Darbaan darbaan = Darbaan.newInstance(new DarbaanConfiguration.Builder()
+            .setIp("192.168.13.51")
+            .setPort(6001)
+            .build());
+        byte[] payload = new byte[0];
+        try {
+            payload = MAPPER.writeValueAsBytes(Collections.singletonList("salam"));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        while (!darbaan.isServiceAvailable("test", "1"))
+            Thread.sleep(10);
+        System.out.println("start requesting...");
+
+        int ch = System.in.read();
+        while (ch != '0') {
+            Request request = new Request()
+                .setRole("USER")
+                .setServiceName("test")
+                .setServiceVersion("1")
+                .setActionCategory("testCat")
+                .setActionName("testAct")
+                .setPayloadBytes(payload);
+            CompletableFuture<Response> responseF = darbaan.process(request);
+            responseF.handle((r, t) -> {
+                if (Objects.nonNull(r))
+                    System.out.println("Reply: " + r);
+                if (Objects.nonNull(t))
+                    System.out.println("Exception: " + t.getMessage());
+                return "OK";
+            }).get();
+            ch = System.in.read();
+        }
+        darbaan.destroy();
     }
-    while (!darbaan.isServiceAvailable("test", "1"))
-      Thread.sleep(10);
-    System.out.println("start requesting...");
-
-    int ch = System.in.read();
-    while (ch != '0') {
-      Request request = new Request()
-          .setRole("USER")
-          .setServiceName("test")
-          .setServiceVersion("1")
-          .setActionCategory("testCat")
-          .setActionName("testAct")
-          .setPayloadBytes(payload);
-      CompletableFuture<Response> responseF = darbaan.process(request);
-      responseF.handle((r, t) -> {
-        if (Objects.nonNull(r))
-          System.out.println("Reply: " + r);
-        if (Objects.nonNull(t))
-          System.out.println("Exception: " + t.getMessage());
-        return "OK";
-      }).get();
-      ch = System.in.read();
-    }
-
-    darbaan.destroy();
-  }
-
 }

@@ -37,7 +37,9 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static com.piranframework.darbaan.Darbaan.configuration;
-import static com.piranframework.darbaan.util.Constants.*;
+import static com.piranframework.darbaan.util.Constants.ADMIN_ROLE;
+import static com.piranframework.darbaan.util.Constants.CHANNEL_ROLE;
+import static com.piranframework.darbaan.util.Constants.SERVER_ROLE;
 import static com.piranframework.darbaan.util.IdentityUtil.serverId;
 import static com.piranframework.darbaan.util.IdentityUtil.serviceId;
 
@@ -51,133 +53,134 @@ import static com.piranframework.darbaan.util.IdentityUtil.serviceId;
  * @author Isa Hekmatizadeh
  */
 class ServicePool {
-  private static final Logger log = LoggerFactory.getLogger(ServicePool.class);
-  private final Map<String, Service> services = new ConcurrentHashMap<>();
-  private final Map<ZFrame, Server> servers = new ConcurrentHashMap<>();
-  private final Geev geev;
-  private final Consumer<String> registerNewNode;
-  private final Consumer<Node> registerNewAdmin;
-  private final Consumer<Node> unregisterAdmin;
 
-  /**
-   * Start geev node discovery based on the {@link DarbaanConfiguration}
-   *
-   * @param registerNewNode consumer to run after a new node found
-   * @throws IOException if geev couldn't open socket
-   */
-  ServicePool(Consumer<String> registerNewNode, Consumer<Node> registerNewAdmin,
-              Consumer<Node> unregisterAdmin) throws
-    IOException {
-    this.registerNewNode = registerNewNode;
-    this.registerNewAdmin = registerNewAdmin;
-    this.unregisterAdmin = unregisterAdmin;
-    Node mySelf = new Node(CHANNEL_ROLE, configuration.getIp(), configuration.getPort());
-    geev = Geev.run(new GeevConfig.Builder()
-      .setMySelf(mySelf)
-      .onJoin(this::join)
-      .onLeave(this::leave)
-      .build());
-  }
+    private static final Logger log = LoggerFactory.getLogger(ServicePool.class);
+    private final Map<String, Service> services = new ConcurrentHashMap<>();
+    private final Map<ZFrame, Server> servers = new ConcurrentHashMap<>();
+    private final Geev geev;
+    private final Consumer<String> registerNewNode;
+    private final Consumer<Node> registerNewAdmin;
+    private final Consumer<Node> unregisterAdmin;
 
-  /**
-   * Destroy geev gracefully
-   */
-  void destroy() {
-    geev.destroy();
-  }
-
-  void notifyRemove(String id) {
-    StringTokenizer st = new StringTokenizer(id, ":");
-    Node node = new Node(SERVER_ROLE, st.nextToken(), Integer.parseInt(st.nextToken()));
-    geev.nodeDisconnected(node);
-    leave(node);
-  }
-
-  private void leave(Node node) {
-    log.info("node {} left", node);
-    if (ADMIN_ROLE.equals(node.getRole()))
-      unregisterAdmin.accept(node);
-    else if (SERVER_ROLE.equals(node.getRole())) {
-      Server server = servers.remove(new ZFrame(serverId(node)));
-      if (Objects.nonNull(server)) {
-        server.getServices().stream().map(Service::id).forEach(services::remove);
-        server.destroy();
-      }
+    /**
+     * Start geev node discovery based on the {@link DarbaanConfiguration}
+     *
+     * @param registerNewNode consumer to run after a new node found
+     * @throws IOException if geev couldn't open socket
+     */
+    ServicePool(Consumer<String> registerNewNode, Consumer<Node> registerNewAdmin,
+                Consumer<Node> unregisterAdmin) throws
+        IOException {
+        this.registerNewNode = registerNewNode;
+        this.registerNewAdmin = registerNewAdmin;
+        this.unregisterAdmin = unregisterAdmin;
+        Node mySelf = new Node(CHANNEL_ROLE, configuration.getIp(), configuration.getPort());
+        geev = Geev.run(new GeevConfig.Builder()
+            .setMySelf(mySelf)
+            .onJoin(this::join)
+            .onLeave(this::leave)
+            .build());
     }
-  }
 
-  private void join(Node node) {
-    log.info("new node joined: {}", node);
-    if (node.getRole().equals(SERVER_ROLE))
-      registerNewNode.accept(serverId(node));
-    else if (node.getRole().equals(ADMIN_ROLE))
-      registerNewAdmin.accept(node);
-  }
-
-  void addService(ZFrame serverIdentity, Service service) {
-    log.info("new service {} found in server {}", service.id(), serverIdentity);
-    Server server = servers.get(serverIdentity);
-    Service oldService = services.get(service.id());
-    if (Objects.isNull(oldService)) {
-      if (Objects.isNull(server)) {
-        server = new Server(serverIdentity);
-        servers.put(serverIdentity, server);
-      }
-      server.add(service);
-      services.put(service.id(), service);
-    } else {
-      if (Objects.isNull(server)) {
-        server = new Server(serverIdentity);
-        servers.put(serverIdentity, server);
-      }
-      server.add(oldService);
+    /**
+     * Destroy geev gracefully
+     */
+    void destroy() {
+        geev.destroy();
     }
-  }
 
-  /**
-   * Record an interaction with a server
-   *
-   * @param serverIdentity server identity
-   */
-  void interaction(ZFrame serverIdentity) {
-    Server server = servers.get(serverIdentity);
-    if (Objects.nonNull(server))
-      server.interaction();
-  }
+    void notifyRemove(String id) {
+        StringTokenizer st = new StringTokenizer(id, ":");
+        Node node = new Node(SERVER_ROLE, st.nextToken(), Integer.parseInt(st.nextToken()));
+        geev.nodeDisconnected(node);
+        leave(node);
+    }
 
-  /**
-   * Find and return servers which is inactive for a while
-   *
-   * @return inactiveServers
-   */
-  Stream<Server> findInactiveServers() {
-    return servers.values().stream().filter(Server::notResponding);
-  }
+    private void leave(Node node) {
+        log.info("node {} left", node);
+        if (ADMIN_ROLE.equals(node.getRole()))
+            unregisterAdmin.accept(node);
+        else if (SERVER_ROLE.equals(node.getRole())) {
+            Server server = servers.remove(new ZFrame(serverId(node)));
+            if (Objects.nonNull(server)) {
+                server.getServices().stream().map(Service::id).forEach(services::remove);
+                server.destroy();
+            }
+        }
+    }
 
-  /**
-   * It's pick a next server to send a request for special service. it act in round-robin fashion
-   *
-   * @param serviceId service the server should provide
-   * @return next server available to provide this service
-   */
-  ZFrame nextServer(String serviceId) {
-    Service service = services.get(serviceId);
-    if (Objects.isNull(service))
-      return null;
-    Server server = service.nextServer();
-    if (Objects.isNull(server))
-      return null;
-    return server.getIdentity();
-  }
+    private void join(Node node) {
+        log.info("new node joined: {}", node);
+        if (node.getRole().equals(SERVER_ROLE))
+            registerNewNode.accept(serverId(node));
+        else if (node.getRole().equals(ADMIN_ROLE))
+            registerNewAdmin.accept(node);
+    }
 
-  /**
-   * Check if a specific service recognized in darbaan
-   *
-   * @param name    name of service
-   * @param version version of service
-   * @return true if service recognized
-   */
-  boolean isServiceAvailable(String name, String version) {
-    return services.containsKey(serviceId(name, version));
-  }
+    void addService(ZFrame serverIdentity, Service service) {
+        log.info("new service {} found in server {}", service.id(), serverIdentity);
+        Server server = servers.get(serverIdentity);
+        Service oldService = services.get(service.id());
+        if (Objects.isNull(oldService)) {
+            if (Objects.isNull(server)) {
+                server = new Server(serverIdentity);
+                servers.put(serverIdentity, server);
+            }
+            server.add(service);
+            services.put(service.id(), service);
+        } else {
+            if (Objects.isNull(server)) {
+                server = new Server(serverIdentity);
+                servers.put(serverIdentity, server);
+            }
+            server.add(oldService);
+        }
+    }
+
+    /**
+     * Record an interaction with a server
+     *
+     * @param serverIdentity server identity
+     */
+    void interaction(ZFrame serverIdentity) {
+        Server server = servers.get(serverIdentity);
+        if (Objects.nonNull(server))
+            server.interaction();
+    }
+
+    /**
+     * Find and return servers which is inactive for a while
+     *
+     * @return inactiveServers
+     */
+    Stream<Server> findInactiveServers() {
+        return servers.values().stream().filter(Server::notResponding);
+    }
+
+    /**
+     * It's pick a next server to send a request for special service. it act in round-robin fashion
+     *
+     * @param serviceId service the server should provide
+     * @return next server available to provide this service
+     */
+    ZFrame nextServer(String serviceId) {
+        Service service = services.get(serviceId);
+        if (Objects.isNull(service))
+            return null;
+        Server server = service.nextServer();
+        if (Objects.isNull(server))
+            return null;
+        return server.getIdentity();
+    }
+
+    /**
+     * Check if a specific service recognized in darbaan
+     *
+     * @param name    name of service
+     * @param version version of service
+     * @return true if service recognized
+     */
+    boolean isServiceAvailable(String name, String version) {
+        return services.containsKey(serviceId(name, version));
+    }
 }

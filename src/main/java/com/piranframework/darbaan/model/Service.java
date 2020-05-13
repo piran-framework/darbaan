@@ -31,76 +31,77 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @author Isa Hekmatizadeh
  */
 public class Service {
-  private final Queue<Server> servers = new ConcurrentLinkedQueue<>();
-  private final String id;
 
-  /**
-   * Construct a service with the given name and version
-   *
-   * @param name    service name
-   * @param version service version
-   */
-  public Service(String name, String version) {
-    this.id = IdentityUtil.serviceId(name, version);
-  }
+    private final Queue<Server> servers = new ConcurrentLinkedQueue<>();
+    private final String id;
 
-  /**
-   * Get the service id
-   *
-   * @return service id
-   */
-  public String id() {
-    return id;
-  }
-
-  /**
-   * Add a server to the list of servers which provide this service
-   *
-   * @param server server to add
-   */
-  void justAdd(Server server) {
-    synchronized (servers) {
-      servers.add(server);
+    /**
+     * Construct a service with the given name and version
+     *
+     * @param name    service name
+     * @param version service version
+     */
+    public Service(String name, String version) {
+        this.id = IdentityUtil.serviceId(name, version);
     }
-  }
 
-  /**
-   * Remove a server from the list of servers which provide this service
-   *
-   * @param server server to remove
-   */
-  void justRemove(Server server) {
-    synchronized (servers) {
-      servers.remove(server);
+    /**
+     * Get the service id
+     *
+     * @return service id
+     */
+    public String id() {
+        return id;
     }
-  }
 
-  /**
-   * Return the next server to call for this service. This method act as a round-robin load balancer
-   *
-   * @return next server to use
-   */
-  public Server nextServer() {
-    Server next = servers.peek();
-    if (Objects.isNull(next))
-      return null;
-    servers.add(next);
-    servers.poll();
-    return next;
-  }
+    /**
+     * Add a server to the list of servers which provide this service
+     *
+     * @param server server to add
+     */
+    void justAdd(Server server) {
+        synchronized (servers) {
+            servers.add(server);
+        }
+    }
+
+    /**
+     * Remove a server from the list of servers which provide this service
+     *
+     * @param server server to remove
+     */
+    void justRemove(Server server) {
+        synchronized (servers) {
+            servers.remove(server);
+        }
+    }
+
+    /**
+     * Return the next server to call for this service. This method act as a round-robin load balancer
+     *
+     * @return next server to use
+     */
+    public Server nextServer() {
+        Server next = servers.peek();
+        if (Objects.isNull(next))
+            return null;
+        servers.add(next);
+        servers.poll();
+        return next;
+    }
 
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    Service service = (Service) o;
-    return Objects.equals(id, service.id);
-  }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Service service = (Service) o;
+        return Objects.equals(id, service.id);
+    }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(id);
-  }
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 
 }

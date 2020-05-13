@@ -28,10 +28,11 @@ import java.util.StringTokenizer;
  * @author Esa Hekmatizadeh
  */
 public final class IdGenerator {
-    private static char[] chars = new char[]{
-            'j', 's', 'o', 'e', 'f', 'a', 'u', 'm', 'g', 'c', 'x', 'q', 'z',
-            'h', 'b', 'n', 't', 'p', 'k', 'd', 'y', 'v', 'l', 'i', 'w', 'r',
-            '5', '9', '4', '6', '1', '7', '0', '3', '8', '2'
+
+    private static final char[] chars = new char[]{
+        'j', 's', 'o', 'e', 'f', 'a', 'u', 'm', 'g', 'c', 'x', 'q', 'z',
+        'h', 'b', 'n', 't', 'p', 'k', 'd', 'y', 'v', 'l', 'i', 'w', 'r',
+        '5', '9', '4', '6', '1', '7', '0', '3', '8', '2'
     };
 
     public static String id(String prefix) {
@@ -60,8 +61,8 @@ public final class IdGenerator {
         int sum = prefix.chars().sum() + random.chars().sum();
         StringBuilder builder = new StringBuilder();
         timeMillis.chars()
-                .map(i -> (i + sum) % chars.length)
-                .forEach(i -> builder.append(chars[i]));
-        return prefix + "-" + timeMillis + "-" + random + "-" + builder.toString().toUpperCase();
+            .map(i -> (i + sum) % chars.length)
+            .forEach(i -> builder.append(chars[i]));
+        return String.format("%s-%s-%s-%s", prefix, timeMillis, random, builder.toString().toUpperCase());
     }
 }

@@ -35,75 +35,76 @@ import java.util.Objects;
  * @author Isa Hekmatizadeh
  */
 public class Response {
-  private static final ObjectMapper mapper = new ObjectMapper();
 
-  static {
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    mapper.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
-  }
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  private final String requestId;
-  private final int status;
-  private final byte[] responseBytes;
-  private Object response;
+    static {
+        MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        MAPPER.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
+    }
 
-  Response(String requestId, int status, byte[] responseBytes) {
-    this.requestId = requestId;
-    this.status = status;
-    this.responseBytes = responseBytes;
-  }
+    private final String requestId;
+    private final int status;
+    private final byte[] responseBytes;
+    private Object response;
 
-  /**
-   * Get the request id correlated to this response
-   *
-   * @return request id
-   */
-  public String getRequestId() {
-    return requestId;
-  }
+    Response(String requestId, int status, byte[] responseBytes) {
+        this.requestId = requestId;
+        this.status = status;
+        this.responseBytes = responseBytes;
+    }
 
-  /**
-   * Get the status of the response, response code is equivalent as http status codes. Successful
-   * response has 200 status code.
-   *
-   * @return status code of response
-   */
-  public int getStatus() {
-    return status;
-  }
+    /**
+     * Get the request id correlated to this response
+     *
+     * @return request id
+     */
+    public String getRequestId() {
+        return requestId;
+    }
 
-  /**
-   * Get response payload as pure byte array
-   *
-   * @return payload in byte array format
-   */
-  public byte[] getResponseBytes() {
-    return responseBytes;
-  }
+    /**
+     * Get the status of the response, response code is equivalent as http status codes. Successful
+     * response has 200 status code.
+     *
+     * @return status code of response
+     */
+    public int getStatus() {
+        return status;
+    }
 
-  /**
-   * Deserialize and return response as instance of Object class
-   *
-   * @return response in type of object
-   * @throws IOException if deserialization failed
-   */
-  public Object getResponse() throws IOException {
-    if (Objects.isNull(response))
-      response = mapper.readValue(responseBytes, Object.class);
-    return response;
-  }
+    /**
+     * Get response payload as pure byte array
+     *
+     * @return payload in byte array format
+     */
+    public byte[] getResponseBytes() {
+        return responseBytes;
+    }
 
-  /**
-   * Deserialize and cast return response to clazz
-   *
-   * @param clazz type of the response
-   * @return response payload in type of clazz
-   * @throws IOException if deserialization failed
-   */
-  public <T> T getResponse(Class<T> clazz) throws IOException {
-    if (Objects.isNull(response))
-      response = mapper.readValue(responseBytes, clazz);
-    return clazz.cast(response);
-  }
+    /**
+     * Deserialize and return response as instance of Object class
+     *
+     * @return response in type of object
+     * @throws IOException if deserialization failed
+     */
+    public Object getResponse() throws IOException {
+        if (Objects.isNull(response))
+            response = MAPPER.readValue(responseBytes, Object.class);
+        return response;
+    }
+
+    /**
+     * Deserialize and cast return response to clazz
+     *
+     * @param clazz type of the response
+     * @return response payload in type of clazz
+     * @throws IOException if deserialization failed
+     */
+    public <T> T getResponse(Class<T> clazz) throws IOException {
+        if (Objects.isNull(response))
+            response = MAPPER.readValue(responseBytes, clazz);
+        return clazz.cast(response);
+    }
 }
