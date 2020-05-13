@@ -47,133 +47,133 @@ import java.util.function.BiConsumer;
  */
 class AdminClient {
 
-    private static final Logger log = LoggerFactory.getLogger(AdminClient.class);
-    private final ZContext ctx;
-    private final Map<Node, Thread> threads = new ConcurrentHashMap<>();
-    private final Map<Node, Process> processes = new ConcurrentHashMap<>();
-    private final BiConsumer<String, List<String>> addPermission;
+  private static final Logger log = LoggerFactory.getLogger(AdminClient.class);
+  private final ZContext ctx;
+  private final Map<Node, Thread> threads = new ConcurrentHashMap<>();
+  private final Map<Node, Process> processes = new ConcurrentHashMap<>();
+  private final BiConsumer<String, List<String>> addPermission;
 
-    AdminClient(ZContext ctx, BiConsumer<String, List<String>> addPermission) {
-        this.ctx = ctx;
-        this.addPermission = addPermission;
+  AdminClient(ZContext ctx, BiConsumer<String, List<String>> addPermission) {
+    this.ctx = ctx;
+    this.addPermission = addPermission;
+  }
+
+  /**
+   * create a dedicated thread to handle communication with newly found ADMIN node
+   *
+   * @param adminServer newly found admin node
+   */
+  void join(Node adminServer) {
+    if (threads.containsKey(adminServer))
+      return;
+    Process process = new Process(adminServer);
+    Thread thread = new Thread(process);
+    thread.start();
+    threads.put(adminServer, thread);
+    processes.put(adminServer, process);
+  }
+
+  /**
+   * interrupt dedicated thread of this node.
+   *
+   * @param adminServer disconnected admin node
+   */
+  void leave(Node adminServer) {
+    Thread thread = threads.remove(adminServer);
+    Process process = processes.remove(adminServer);
+    process.terminate();
+    if (Objects.nonNull(thread)) {
+      try {
+        thread.join();
+      } catch (InterruptedException e) {
+        thread.interrupt();
+      }
+    }
+  }
+
+  class Process implements Runnable {
+
+    private final Node node;
+    private volatile boolean stopped = false;
+    private long lastSendHLT = 0;
+
+    Process(Node node) {
+      this.node = node;
     }
 
-    /**
-     * create a dedicated thread to handle communication with newly found ADMIN node
-     *
-     * @param adminServer newly found admin node
-     */
-    void join(Node adminServer) {
-        if (threads.containsKey(adminServer))
-            return;
-        Process process = new Process(adminServer);
-        Thread thread = new Thread(process);
-        thread.start();
-        threads.put(adminServer, thread);
-        processes.put(adminServer, process);
+    void terminate() {
+      stopped = true;
     }
 
-    /**
-     * interrupt dedicated thread of this node.
-     *
-     * @param adminServer disconnected admin node
-     */
-    void leave(Node adminServer) {
-        Thread thread = threads.remove(adminServer);
-        Process process = processes.remove(adminServer);
-        process.terminate();
-        if (Objects.nonNull(thread)) {
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                thread.interrupt();
+    @Override
+    public void run() {
+      try (ZMQ.Socket dealer = ctx.createSocket(ZMQ.DEALER)) {
+        dealer.setIdentity((Darbaan.configuration.getIp() + ":" + Darbaan.configuration.getPort()).getBytes());
+        dealer.setReconnectIVLMax(1000);
+        dealer.setSndHWM(1000);
+        dealer.setRcvHWM(1000);
+        dealer.connect(String.format("tcp://%s:%d", node.getIp(), node.getPort()));
+        sendSecReq(dealer);
+        while (!stopped) {
+          try {
+            sendHLT(dealer);
+            handleRecv(dealer);
+          } catch (ZMQException e) {
+            if (ZError.ETERM == e.getErrorCode())
+              break;
+            else {
+              log.error("Unexpected error occurred: ", e);
             }
+          }
         }
+      }
     }
 
-    class Process implements Runnable {
-
-        private final Node node;
-        private volatile boolean stopped = false;
-        private long lastSendHLT = 0;
-
-        Process(Node node) {
-            this.node = node;
-        }
-
-        void terminate() {
-            stopped = true;
-        }
-
-        @Override
-        public void run() {
-            try (ZMQ.Socket dealer = ctx.createSocket(ZMQ.DEALER)) {
-                dealer.setIdentity((Darbaan.configuration.getIp() + ":" + Darbaan.configuration.getPort()).getBytes());
-                dealer.setReconnectIVLMax(1000);
-                dealer.setSndHWM(1000);
-                dealer.setRcvHWM(1000);
-                dealer.connect(String.format("tcp://%s:%d", node.getIp(), node.getPort()));
-                sendSecReq(dealer);
-                while (!stopped) {
-                    try {
-                        sendHLT(dealer);
-                        handleRecv(dealer);
-                    } catch (ZMQException e) {
-                        if (e.getErrorCode() == ZError.ETERM)
-                            break;
-                        else {
-                            log.error("Unexpected error occurred: ", e);
-                        }
-                    }
-                }
-            }
-        }
-
-        private void handleRecv(ZMQ.Socket dealer) {
-            ZMsg msg = ZMsg.recvMsg(dealer, ZMQ.NOBLOCK);
-            if (Objects.isNull(msg))
-                return;
-            msg.pop();//empty frame
-            ZFrame protocol = msg.pop();
-            if (!protocol.streq(Constants.DST_PROTOCOL_HEADER)) { //message isn't DST version 1
-                log.error("corrupted message received: protocol frame is {}, rest of message is: {}",
-                    protocol, msg);
-                return;
-            }
-            String command = msg.popString();
-            if (Objects.equals(Constants.PERMS, command)) {
-                handlePerms(msg);
-            }
-        }
-
-        private void handlePerms(ZMsg msg) {
-            String actionAddress = msg.popString();
-            while (Objects.nonNull(actionAddress)) {
-                String roles = msg.popString();
-                List<String> listOfRoles = Arrays.asList(roles.split("/"));
-                addPermission.accept(actionAddress, listOfRoles);
-                actionAddress = msg.popString();
-            }
-        }
-
-        @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
-        private void sendSecReq(ZMQ.Socket dealer) {
-            ZMsg msg = new ZMsg();
-            msg.add(Constants.DST_PROTOCOL_HEADER);
-            msg.add(Constants.SEC_REQ);
-            msg.send(dealer);
-        }
-
-        @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
-        private void sendHLT(ZMQ.Socket dealer) {
-            if (lastSendHLT < System.currentTimeMillis() - Constants.HLT_INTERVAL) {
-                ZMsg msg = new ZMsg();
-                msg.add(Constants.DST_PROTOCOL_HEADER);
-                msg.add(Constants.HLT);
-                msg.add(Constants.CHANNEL_ROLE);
-                msg.send(dealer);
-                lastSendHLT = System.currentTimeMillis();
-            }
-        }
+    private void handleRecv(ZMQ.Socket dealer) {
+      ZMsg msg = ZMsg.recvMsg(dealer, ZMQ.NOBLOCK);
+      if (Objects.isNull(msg))
+        return;
+      msg.pop();//empty frame
+      ZFrame protocol = msg.pop();
+      if (!protocol.streq(Constants.DST_PROTOCOL_HEADER)) { //message isn't DST version 1
+        log.error("corrupted message received: protocol frame is {}, rest of message is: {}",
+            protocol, msg);
+        return;
+      }
+      String command = msg.popString();
+      if (Objects.equals(Constants.PERMS, command)) {
+        handlePerms(msg);
+      }
     }
+
+    private void handlePerms(ZMsg msg) {
+      String actionAddress = msg.popString();
+      while (Objects.nonNull(actionAddress)) {
+        String roles = msg.popString();
+        List<String> listOfRoles = Arrays.asList(roles.split("/"));
+        addPermission.accept(actionAddress, listOfRoles);
+        actionAddress = msg.popString();
+      }
+    }
+
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    private void sendSecReq(ZMQ.Socket dealer) {
+      ZMsg msg = new ZMsg();
+      msg.add(Constants.DST_PROTOCOL_HEADER);
+      msg.add(Constants.SEC_REQ);
+      msg.send(dealer);
+    }
+
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    private void sendHLT(ZMQ.Socket dealer) {
+      if (lastSendHLT < System.currentTimeMillis() - Constants.HLT_INTERVAL) {
+        ZMsg msg = new ZMsg();
+        msg.add(Constants.DST_PROTOCOL_HEADER);
+        msg.add(Constants.HLT);
+        msg.add(Constants.CHANNEL_ROLE);
+        msg.send(dealer);
+        lastSendHLT = System.currentTimeMillis();
+      }
+    }
+  }
 }

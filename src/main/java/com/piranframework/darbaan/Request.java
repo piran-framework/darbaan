@@ -43,125 +43,125 @@ import java.util.Objects;
  */
 public class Request {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    static {
-        MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        MAPPER.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
-    }
+  static {
+    MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    MAPPER.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
+  }
 
-    private String role;
-    private String requestId;
-    private String serviceName;
-    private String serviceVersion;
-    private String actionCategory;
-    private String actionName;
-    private byte[] payloadBytes = new byte[0];
-    private Object payload;
+  private String role;
+  private String requestId;
+  private String serviceName;
+  private String serviceVersion;
+  private String actionCategory;
+  private String actionName;
+  private byte[] payloadBytes = new byte[0];
+  private Object payload;
 
-    public String getRole() {
-        return role;
-    }
+  public String getRole() {
+    return role;
+  }
 
-    public Request setRole(String role) {
-        this.role = role;
-        return this;
-    }
+  public Request setRole(String role) {
+    this.role = role;
+    return this;
+  }
 
-    /**
-     * Retrieve request id. request id generated just after calling process method of
-     * {@link Darbaan} instance
-     *
-     * @return request id
-     */
-    public String getRequestId() {
-        return requestId;
-    }
+  /**
+   * Retrieve request id. request id generated just after calling process method of
+   * {@link Darbaan} instance
+   *
+   * @return request id
+   */
+  public String getRequestId() {
+    return requestId;
+  }
 
-    void setRequestId(String requestId) {
-        this.requestId = requestId;
-    }
+  void setRequestId(String requestId) {
+    this.requestId = requestId;
+  }
 
-    public String getServiceName() {
-        return serviceName;
-    }
+  public String getServiceName() {
+    return serviceName;
+  }
 
-    public Request setServiceName(String serviceName) {
-        this.serviceName = serviceName;
-        return this;
-    }
+  public Request setServiceName(String serviceName) {
+    this.serviceName = serviceName;
+    return this;
+  }
 
-    public String getServiceVersion() {
-        return serviceVersion;
-    }
+  public String getServiceVersion() {
+    return serviceVersion;
+  }
 
-    public Request setServiceVersion(String serviceVersion) {
-        this.serviceVersion = serviceVersion;
-        return this;
-    }
+  public Request setServiceVersion(String serviceVersion) {
+    this.serviceVersion = serviceVersion;
+    return this;
+  }
 
-    public String getActionCategory() {
-        return actionCategory;
-    }
+  public String getActionCategory() {
+    return actionCategory;
+  }
 
-    public Request setActionCategory(String actionCategory) {
-        this.actionCategory = actionCategory;
-        return this;
-    }
+  public Request setActionCategory(String actionCategory) {
+    this.actionCategory = actionCategory;
+    return this;
+  }
 
-    public String getActionName() {
-        return actionName;
-    }
+  public String getActionName() {
+    return actionName;
+  }
 
-    public Request setActionName(String actionName) {
-        this.actionName = actionName;
-        return this;
-    }
+  public Request setActionName(String actionName) {
+    this.actionName = actionName;
+    return this;
+  }
 
 
-    public byte[] getPayloadBytes() {
-        return payloadBytes;
-    }
+  public byte[] getPayloadBytes() {
+    return payloadBytes;
+  }
 
-    /**
-     * Set the payload bytes directly
-     *
-     * @param payloadBytes json serialized payload
-     * @return current instance
-     */
-    public Request setPayloadBytes(byte[] payloadBytes) {
-        this.payloadBytes = payloadBytes;
-        return this;
-    }
+  /**
+   * Set the payload bytes directly
+   *
+   * @param payloadBytes json serialized payload
+   * @return current instance
+   */
+  public Request setPayloadBytes(byte[] payloadBytes) {
+    this.payloadBytes = payloadBytes;
+    return this;
+  }
 
-    public Object getPayload() {
-        return payload;
-    }
+  public Object getPayload() {
+    return payload;
+  }
 
-    /**
-     * Set the payload object, this method automatically serialize payload
-     *
-     * @param payload action argument to be sent
-     * @return current instance
-     * @throws JsonProcessingException if serializing payload encounter exception
-     */
-    public Request setPayload(Object payload) throws JsonProcessingException {
-        this.payload = payload;
-        this.payloadBytes = MAPPER.writeValueAsBytes(payload);
-        return this;
-    }
+  /**
+   * Set the payload object, this method automatically serialize payload
+   *
+   * @param payload action argument to be sent
+   * @return current instance
+   * @throws JsonProcessingException if serializing payload encounter exception
+   */
+  public Request setPayload(Object payload) throws JsonProcessingException {
+    this.payload = payload;
+    this.payloadBytes = MAPPER.writeValueAsBytes(payload);
+    return this;
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Request request = (Request) o;
-        return Objects.equals(requestId, request.requestId);
-    }
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Request request = (Request) o;
+    return Objects.equals(requestId, request.requestId);
+  }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(requestId);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(requestId);
+  }
 }

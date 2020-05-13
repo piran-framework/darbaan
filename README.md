@@ -17,9 +17,9 @@ Then you can add darbaan into your project POM file like this:
 ```
 
 ## Contribution
-Any contributions are welcomed. Also if you find any problem using darbaan you can create issue in 
-github issue tracker of the project. There is just one limitation for the contribution and it's 
-respect the code style located in code-style.xml
+Any contributions are welcomed. Also, if you have any issues using Darbaan, you can create an issue on 
+Github issue tracker of the project. There is just one limitation for contributions, and it is 
+respecting the code style located in code-style.xml
 
 ## License
 Copyright (c) 2018 Isa Hekmatizadeh.

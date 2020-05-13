@@ -29,14 +29,14 @@ import java.util.TreeMap;
  */
 class PermissionCache {
 
-    private final Map<String, Collection<String>> permissions = new TreeMap<>();
+  private final Map<String, Collection<String>> permissions = new TreeMap<>();
 
-    void addPermission(String actionAddress, Collection<String> roles) {
-        permissions.put(actionAddress, roles);
-    }
+  void addPermission(String actionAddress, Collection<String> roles) {
+    permissions.put(actionAddress, roles);
+  }
 
-    boolean hasAccess(String serviceId, String actionCategory, String action, String role) {
-        Collection<String> roles = permissions.get(String.format("%s/%s/%s", serviceId, actionCategory, action));
-        return Objects.nonNull(roles) && !roles.isEmpty() && roles.contains(role);
-    }
+  boolean hasAccess(String serviceId, String actionCategory, String action, String role) {
+    Collection<String> roles = permissions.get(String.format("%s/%s/%s", serviceId, actionCategory, action));
+    return Objects.nonNull(roles) && !roles.isEmpty() && roles.contains(role);
+  }
 }

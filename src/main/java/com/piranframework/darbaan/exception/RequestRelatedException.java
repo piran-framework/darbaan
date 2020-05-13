@@ -31,7 +31,7 @@ public abstract class RequestRelatedException extends DarbaanException {
     this.requestId = requestId;
   }
 
-    public String getRequestId() {
-        return requestId;
-    }
+  public String getRequestId() {
+    return requestId;
+  }
 }

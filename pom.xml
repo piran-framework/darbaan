@@ -20,7 +20,8 @@
 
     <scm>
         <connection>scm:git:git://github.com/piran-framework/darbaan.git</connection>
-        <developerConnection>scm:git:ssh://github.com:piran-framework/darbaan.git</developerConnection>
+        <developerConnection>scm:git:ssh://github.com:piran-framework/darbaan.git
+        </developerConnection>
         <url>http://github.com/piran-framework/darbaan/tree/master</url>
     </scm>
 
@@ -59,11 +60,12 @@
         <codehaus-maven-plugin.version>2.7</codehaus-maven-plugin.version>
         <javadoc-maven-plugin.version>2.9.1</javadoc-maven-plugin.version>
         <gpg-maven-plugin.version>1.5</gpg-maven-plugin.version>
+        <checkstyle-maven-plugin.version>3.0.0</checkstyle-maven-plugin.version>
     </properties>
 
     <dependencies>
 
-        <!--########################################## PIRAN-FRAMEWORK ##############################################-->
+        <!--############################## PIRAN-FRAMEWORK ######################################-->
 
         <dependency>
             <groupId>com.piran-framework</groupId>
@@ -71,7 +73,7 @@
             <version>0.3-RELEASE</version>
         </dependency>
 
-        <!--################################################## 0MQ ##################################################-->
+        <!--#################################### 0MQ ############################################-->
 
         <dependency>
             <groupId>org.zeromq</groupId>
@@ -79,7 +81,7 @@
             <version>${jeromq.version}</version>
         </dependency>
 
-        <!--################################################# UTILS #################################################-->
+        <!--########################################## UTILS ####################################-->
 
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -93,7 +95,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!--################################################ JACKSON ################################################-->
+        <!--##################################### JACKSON #######################################-->
 
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
@@ -106,7 +108,7 @@
             <version>${jackson.version}</version>
         </dependency>
 
-        <!--################################################## LOG ##################################################-->
+        <!--######################################### LOG #######################################-->
 
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -119,7 +121,7 @@
             <version>${slf4j.version}</version>
         </dependency>
 
-        <!--################################################## END ##################################################-->
+        <!--###################################### END ##########################################-->
 
     </dependencies>
     <build>
