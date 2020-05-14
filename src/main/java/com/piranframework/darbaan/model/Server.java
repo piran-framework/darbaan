@@ -27,11 +27,12 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Represent a server node, in Safir-Darbaan protocol this node should be a Safir node
+ * Represents a server node, in Safir-Darbaan protocol this node should be a Safir node
  *
  * @author Isa Hekmatizadeh
  */
 public class Server {
+
   private final ZFrame identity;
   private final List<Service> services = new ArrayList<>();
   private volatile long lastInteract = System.currentTimeMillis();
@@ -72,7 +73,6 @@ public class Server {
   public void add(Service service) {
     service.justAdd(this);
     services.add(service);
-
   }
 
   /**

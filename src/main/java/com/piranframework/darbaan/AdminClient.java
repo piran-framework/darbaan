@@ -23,10 +23,17 @@ import com.piranframework.darbaan.util.Constants;
 import com.piranframework.geev.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.*;
+import org.zeromq.ZContext;
+import org.zeromq.ZFrame;
+import org.zeromq.ZMQ;
+import org.zeromq.ZMQException;
+import org.zeromq.ZMsg;
 import zmq.ZError;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
@@ -39,6 +46,7 @@ import java.util.function.BiConsumer;
  * @author Isa Hekmatizadeh
  */
 class AdminClient {
+
   private static final Logger log = LoggerFactory.getLogger(AdminClient.class);
   private final ZContext ctx;
   private final Map<Node, Thread> threads = new ConcurrentHashMap<>();
@@ -49,7 +57,6 @@ class AdminClient {
     this.ctx = ctx;
     this.addPermission = addPermission;
   }
-
 
   /**
    * create a dedicated thread to handle communication with newly found ADMIN node
@@ -85,6 +92,7 @@ class AdminClient {
   }
 
   class Process implements Runnable {
+
     private final Node node;
     private volatile boolean stopped = false;
     private long lastSendHLT = 0;
@@ -104,21 +112,20 @@ class AdminClient {
         dealer.setReconnectIVLMax(1000);
         dealer.setSndHWM(1000);
         dealer.setRcvHWM(1000);
-        dealer.connect("tcp://" + node.getIp() + ":" + node.getPort());
+        dealer.connect(String.format("tcp://%s:%d", node.getIp(), node.getPort()));
         sendSecReq(dealer);
         while (!stopped) {
           try {
             sendHLT(dealer);
             handleRecv(dealer);
           } catch (ZMQException e) {
-            if (e.getErrorCode() == ZError.ETERM)
+            if (ZError.ETERM == e.getErrorCode())
               break;
             else {
               log.error("Unexpected error occurred: ", e);
             }
           }
         }
-        dealer.close();
       }
     }
 
@@ -129,15 +136,13 @@ class AdminClient {
       msg.pop();//empty frame
       ZFrame protocol = msg.pop();
       if (!protocol.streq(Constants.DST_PROTOCOL_HEADER)) { //message isn't DST version 1
-        log.error("corrupted message received: protocol frame is {}, rest of message is: " +
-            "{}", protocol, msg);
+        log.error("corrupted message received: protocol frame is {}, rest of message is: {}",
+            protocol, msg);
         return;
       }
       String command = msg.popString();
-      switch (command) {
-        case Constants.PERMS:
-          handlePerms(msg);
-          break;
+      if (Objects.equals(Constants.PERMS, command)) {
+        handlePerms(msg);
       }
     }
 
@@ -146,7 +151,7 @@ class AdminClient {
       while (Objects.nonNull(actionAddress)) {
         String roles = msg.popString();
         List<String> listOfRoles = Arrays.asList(roles.split("/"));
-        addPermission.accept(actionAddress,listOfRoles);
+        addPermission.accept(actionAddress, listOfRoles);
         actionAddress = msg.popString();
       }
     }

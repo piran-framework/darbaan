@@ -19,12 +19,12 @@
 
 package com.piranframework.darbaan.integration;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.piranframework.darbaan.Darbaan;
 import com.piranframework.darbaan.DarbaanConfiguration;
 import com.piranframework.darbaan.Request;
 import com.piranframework.darbaan.Response;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -36,7 +36,8 @@ import java.util.concurrent.ExecutionException;
  * @author Isa Hekmatizadeh
  */
 public class InteractiveServer {
-  private static final ObjectMapper mapper = new ObjectMapper();
+
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
     Darbaan darbaan = Darbaan.newInstance(new DarbaanConfiguration.Builder()
@@ -45,7 +46,7 @@ public class InteractiveServer {
         .build());
     byte[] payload = new byte[0];
     try {
-      payload = mapper.writeValueAsBytes(Collections.singletonList("salam"));
+      payload = MAPPER.writeValueAsBytes(Collections.singletonList("salam"));
     } catch (JsonProcessingException e) {
       e.printStackTrace();
     }
@@ -72,8 +73,6 @@ public class InteractiveServer {
       }).get();
       ch = System.in.read();
     }
-
     darbaan.destroy();
   }
-
 }

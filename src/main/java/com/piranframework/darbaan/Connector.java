@@ -26,18 +26,33 @@ import com.piranframework.darbaan.util.Constants;
 import com.piranframework.geev.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.*;
+import org.zeromq.ZContext;
+import org.zeromq.ZFrame;
+import org.zeromq.ZMQ;
+import org.zeromq.ZMQException;
+import org.zeromq.ZMsg;
 import zmq.ZError;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.Queue;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static com.piranframework.darbaan.Darbaan.configuration;
-import static com.piranframework.darbaan.util.Constants.*;
+import static com.piranframework.darbaan.util.Constants.CHANNEL_ROLE;
+import static com.piranframework.darbaan.util.Constants.INTR;
+import static com.piranframework.darbaan.util.Constants.PING;
+import static com.piranframework.darbaan.util.Constants.PONG;
+import static com.piranframework.darbaan.util.Constants.PROTOCOL_HEADER;
+import static com.piranframework.darbaan.util.Constants.REP;
+import static com.piranframework.darbaan.util.Constants.RINTR;
 import static com.piranframework.darbaan.util.IdentityUtil.serverId;
 import static com.piranframework.darbaan.util.IdentityUtil.serviceId;
 import static org.zeromq.ZMsg.recvMsg;
@@ -48,25 +63,24 @@ import static org.zeromq.ZMsg.recvMsg;
  * @author Isa Hekmatizadeh
  */
 class Connector {
+
   private static final Logger log = LoggerFactory.getLogger(Connector.class);
   private final Thread internalThread;
   private final Thread monitorThread;
   private final ZContext ctx;
   private final Consumer<Response> responseFn;
-  private final AdminClient adminClient;
   private final PermissionCache permissionCache = new PermissionCache();
+  private final Queue<String> newServers = new ConcurrentLinkedQueue<>();
+  private final ServicePool servicePool;
+  private final BlockingQueue<ZMsg> sendQueue = new LinkedBlockingQueue<>();
+  private final Queue<ZFrame> pingQueue = new ConcurrentLinkedQueue<>();
+  private final ExecutorService executorService = Executors.newFixedThreadPool(4);
   private ZMQ.Socket router;
-  private Queue<String> newServers = new ConcurrentLinkedQueue<>();
-  private ServicePool servicePool;
-  private BlockingQueue<ZMsg> sendQueue = new LinkedBlockingQueue<>();
-  private Queue<ZFrame> pingQueue = new ConcurrentLinkedQueue<>();
-  private ExecutorService executorService = Executors.newFixedThreadPool(4);
-
 
   Connector(Consumer<Response> responseFn) throws IOException {
     this.responseFn = responseFn;
     this.ctx = new ZContext(1);
-    adminClient = new AdminClient(ctx,permissionCache::addPermission);
+    AdminClient adminClient = new AdminClient(ctx, permissionCache::addPermission);
     servicePool = new ServicePool(newServers::add, adminClient::join, adminClient::leave);
     internalThread = new Thread(this::initialize);
     internalThread.setName("darbaan-socket-thread");
@@ -78,7 +92,7 @@ class Connector {
 
   private static StringBuffer msgDump(ZMsg msg) {
     StringBuffer msgDump = new StringBuffer();
-    if (msg != null)
+    if (Objects.nonNull(msg))
       msg.dump(msgDump);
     return msgDump;
   }
@@ -92,6 +106,7 @@ class Connector {
           pingQueue.add(s.getIdentity());
       });
       try {
+        // FIXME: Tricky - sleep in a loop
         Thread.sleep(Constants.PING_INTERVAL);
       } catch (InterruptedException e) {
         break;
@@ -128,9 +143,9 @@ class Connector {
       } catch (ZError.IOException e) {
         log.warn("Darbaan socket closed by interrupt");
       } catch (ZMQException e) {
-        if (e.getErrorCode() == ZError.EHOSTUNREACH) {
+        if (ZError.EHOSTUNREACH == e.getErrorCode()) {
           log.error("ERROR: host not found for this message:\n {}", msgDump(shouldSend));
-        } else if (e.getErrorCode() == ZError.ETERM) {
+        } else if (ZError.ETERM == e.getErrorCode()) {
           log.info("exited by termination");
           break;
         } else
@@ -150,11 +165,10 @@ class Connector {
       m.wrap(serverIdentity);
       m.send(router);
     } catch (ZMQException e) {
-      if (e.getErrorCode() != ZError.EHOSTUNREACH)
+      if (ZError.EHOSTUNREACH != e.getErrorCode())
         e.printStackTrace();
     }
   }
-
 
   private void handleReceive(ZMsg msg) {
     try {

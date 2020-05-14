@@ -35,12 +35,13 @@ import java.util.Objects;
  * @author Isa Hekmatizadeh
  */
 public class Response {
-  private static final ObjectMapper mapper = new ObjectMapper();
+
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   static {
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    mapper.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
+    MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    MAPPER.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
   }
 
   private final String requestId;
@@ -90,7 +91,7 @@ public class Response {
    */
   public Object getResponse() throws IOException {
     if (Objects.isNull(response))
-      response = mapper.readValue(responseBytes, Object.class);
+      response = MAPPER.readValue(responseBytes, Object.class);
     return response;
   }
 
@@ -103,7 +104,7 @@ public class Response {
    */
   public <T> T getResponse(Class<T> clazz) throws IOException {
     if (Objects.isNull(response))
-      response = mapper.readValue(responseBytes, clazz);
+      response = MAPPER.readValue(responseBytes, clazz);
     return clazz.cast(response);
   }
 }

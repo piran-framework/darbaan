@@ -29,10 +29,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Objects;
 
 /**
- * Instances of this class representing a request. process method of the {@link Darbaan}
- * object accept instance of this class.
+ * Instance of this class representing a request. The process method of {@link Darbaan}
+ * object accepts instance of this class.
  * <p>
- * Request id automatically generated and assigned by darbaan. clients can use it after sending
+ * Request id automatically generated and assigned by darbaan. Clients can use it after sending
  * request object to the process method of {@link Darbaan}
  * <p>
  * Client can set payloadBytes directly or just set the payload, on the condition of setting
@@ -42,12 +42,13 @@ import java.util.Objects;
  * @author Isa Hekmatizadeh
  */
 public class Request {
-  private static final ObjectMapper mapper = new ObjectMapper();
+
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   static {
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    mapper.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
+    MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    MAPPER.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
   }
 
   private String role;
@@ -147,7 +148,7 @@ public class Request {
    */
   public Request setPayload(Object payload) throws JsonProcessingException {
     this.payload = payload;
-    this.payloadBytes = mapper.writeValueAsBytes(payload);
+    this.payloadBytes = MAPPER.writeValueAsBytes(payload);
     return this;
   }
 

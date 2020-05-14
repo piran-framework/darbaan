@@ -26,6 +26,7 @@ package com.piranframework.darbaan;
  * @author Isa Hekmatizadeh
  */
 public class DarbaanConfiguration {
+
   private final String ip;
   private final int port;
   private final int sendThreadPoolSize;

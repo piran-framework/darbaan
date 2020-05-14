@@ -25,6 +25,7 @@ import com.piranframework.geev.Node;
  * @author Isa Hekmatizadeh
  */
 public class IdentityUtil {
+
   public static String serverId(Node node) {
     return node.getIp() + ":" + node.getPort();
   }

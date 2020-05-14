@@ -25,19 +25,24 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static com.piranframework.darbaan.util.IdGenerator.id;
 
 /**
  * The starting point to connect, send message and get the result from servers.
- * Darbaan automatically discover servers and connect to them and route the message to them and
- * route back the responses to client.
+ * Darbaan automatically discovers and connects to servers, routes the message to them and
+ * routes back the responses to client.
  * An instance of this class is enough for a channel application.
  *
  * @author Isa Hekmatizadeh
  */
 public final class Darbaan {
+
   private static final Logger log = LoggerFactory.getLogger(Darbaan.class);
   static DarbaanConfiguration configuration;
   private final Map<String, CompletableFuture<Response>> requests = new ConcurrentHashMap<>();

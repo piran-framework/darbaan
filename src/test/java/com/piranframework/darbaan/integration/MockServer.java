@@ -19,13 +19,13 @@
 
 package com.piranframework.darbaan.integration;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.piranframework.darbaan.Darbaan;
 import com.piranframework.darbaan.DarbaanConfiguration;
 import com.piranframework.darbaan.Request;
 import com.piranframework.darbaan.Response;
 import com.piranframework.darbaan.exception.RoleHasNotPermissionException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
 
 import java.io.IOException;
@@ -38,9 +38,10 @@ import java.util.stream.Collectors;
  * @author Isa Hekmatizadeh
  */
 public class MockServer {
-  private static final ObjectMapper mapper = new ObjectMapper();
+
+  private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final int REQUEST_NUM = 30;
-  private static ConcurrentLinkedQueue<Long> durations = new ConcurrentLinkedQueue<>();
+  private static final ConcurrentLinkedQueue<Long> DURATIONS = new ConcurrentLinkedQueue<>();
 
   public static void main(String[] args) throws IOException, InterruptedException {
     Darbaan darbaan = Darbaan.newInstance(new DarbaanConfiguration.Builder()
@@ -49,7 +50,7 @@ public class MockServer {
         .build());
     byte[] payload = new byte[0];
     try {
-      payload = mapper.writeValueAsBytes(Collections.singletonList("salam"));
+      payload = MAPPER.writeValueAsBytes(Collections.singletonList("salam"));
     } catch (JsonProcessingException e) {
       e.printStackTrace();
     }
@@ -71,23 +72,20 @@ public class MockServer {
         Assert.assertTrue(t instanceof RoleHasNotPermissionException);
         return "OK";
       }).thenRun(() ->
-              durations.add(System.currentTimeMillis() - begin));
+          DURATIONS.add(System.currentTimeMillis() - begin));
     }
     System.out.println("requesting done!");
-    while (durations.size() < REQUEST_NUM)
+    while (DURATIONS.size() < REQUEST_NUM)
       Thread.sleep(1);
     long allDuration = System.currentTimeMillis() - start;
     System.out.println("all response fetched");
-    long max = durations.stream().max(Long::compare).get();
-    long min = durations.stream().min(Long::compare).get();
-    long average = durations.stream().collect(Collectors.averagingLong(Long::longValue)).longValue();
+    long max = DURATIONS.stream().max(Long::compare).get();
+    long min = DURATIONS.stream().min(Long::compare).get();
+    long average = DURATIONS.stream().collect(Collectors.averagingLong(Long::longValue)).longValue();
     System.out.println("max duration: " + max);
     System.out.println("min duration: " + min);
     System.out.println("average :" + average);
-//    long duration = System.currentTimeMillis() - begin;
     System.out.println("run time: " + allDuration);
     System.out.println("tps: " + REQUEST_NUM * 1000 / allDuration);
-//    darbaan.destroy();
   }
-
 }

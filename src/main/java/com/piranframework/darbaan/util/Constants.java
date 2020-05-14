@@ -23,6 +23,7 @@ package com.piranframework.darbaan.util;
  * @author Isa Hekmatizadeh
  */
 public class Constants {
+
   public static final String ID_REQ_PREFIX = "RQ";
   public static final String CHANNEL_ROLE = "CHANNEL";
   public static final String SERVER_ROLE = "SERVER";

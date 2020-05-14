@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @author Isa Hekmatizadeh
  */
 public class Service {
+
   private final Queue<Server> servers = new ConcurrentLinkedQueue<>();
   private final String id;
 

@@ -25,8 +25,9 @@ import com.piranframework.darbaan.Request;
  * @author Isa Hekmatizadeh
  */
 public class UnknownServiceException extends RequestRelatedException {
+
   public UnknownServiceException(Request request) {
-    super("Unknown Service Exception for service : "
-        + request.getServiceName() + "-" + request.getServiceVersion(), request.getRequestId());
+    super(String.format("Unknown Service Exception for service: %s-%s",
+        request.getServiceName(), request.getServiceVersion()), request.getRequestId());
   }
 }

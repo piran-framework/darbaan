@@ -37,7 +37,9 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static com.piranframework.darbaan.Darbaan.configuration;
-import static com.piranframework.darbaan.util.Constants.*;
+import static com.piranframework.darbaan.util.Constants.ADMIN_ROLE;
+import static com.piranframework.darbaan.util.Constants.CHANNEL_ROLE;
+import static com.piranframework.darbaan.util.Constants.SERVER_ROLE;
 import static com.piranframework.darbaan.util.IdentityUtil.serverId;
 import static com.piranframework.darbaan.util.IdentityUtil.serviceId;
 
@@ -51,6 +53,7 @@ import static com.piranframework.darbaan.util.IdentityUtil.serviceId;
  * @author Isa Hekmatizadeh
  */
 class ServicePool {
+
   private static final Logger log = LoggerFactory.getLogger(ServicePool.class);
   private final Map<String, Service> services = new ConcurrentHashMap<>();
   private final Map<ZFrame, Server> servers = new ConcurrentHashMap<>();
@@ -67,16 +70,16 @@ class ServicePool {
    */
   ServicePool(Consumer<String> registerNewNode, Consumer<Node> registerNewAdmin,
               Consumer<Node> unregisterAdmin) throws
-    IOException {
+      IOException {
     this.registerNewNode = registerNewNode;
     this.registerNewAdmin = registerNewAdmin;
     this.unregisterAdmin = unregisterAdmin;
     Node mySelf = new Node(CHANNEL_ROLE, configuration.getIp(), configuration.getPort());
     geev = Geev.run(new GeevConfig.Builder()
-      .setMySelf(mySelf)
-      .onJoin(this::join)
-      .onLeave(this::leave)
-      .build());
+        .setMySelf(mySelf)
+        .onJoin(this::join)
+        .onLeave(this::leave)
+        .build());
   }
 
   /**

@@ -23,9 +23,12 @@ package com.piranframework.darbaan.exception;
  * @author Isa Hekmatizadeh
  */
 public class RoleHasNotPermissionException extends DarbaanException {
-  public RoleHasNotPermissionException(String role, String serviceId, String actionCategory,
+
+  public RoleHasNotPermissionException(String role,
+                                       String serviceId,
+                                       String actionCategory,
                                        String action) {
-    super("Role " + role + " has not permission to service " + serviceId + "/" + actionCategory +
-        "/" + action);
+    super(String.format("Role %s has not permission to access service: %s/%s/%s",
+        role, serviceId, actionCategory, action));
   }
 }
