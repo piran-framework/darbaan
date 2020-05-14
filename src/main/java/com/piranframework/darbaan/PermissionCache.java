@@ -37,6 +37,6 @@ class PermissionCache {
 
   boolean hasAccess(String serviceId, String actionCategory, String action, String role) {
     Collection<String> roles = permissions.get(String.format("%s/%s/%s", serviceId, actionCategory, action));
-    return Objects.nonNull(roles) && !roles.isEmpty() && roles.contains(role);
+    return Objects.nonNull(roles) && roles.contains(role);
   }
 }

@@ -138,7 +138,7 @@ public class Server {
    * @return server does not pass the retry count
    */
   public boolean retryPing() {
-    return remainInterval - 1 >= 0;
+    return --remainInterval >= 0;
   }
 
 }
